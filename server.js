@@ -31,7 +31,7 @@ app.get('/api/test', (req, res) => {
 });
 
 // ✅ MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/formconnect')
+mongoose.connect(process.env.MONGODB_URI )
   .then(() => console.log('Connected to MongoDB - formconnect database'))
   .catch(err => console.error('MongoDB connection error:', err));
 
