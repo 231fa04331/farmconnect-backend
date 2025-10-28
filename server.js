@@ -14,27 +14,26 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:5000',
-  process.env.FRONTEND_URL,
-  // Add your Vercel frontend URL here if FRONTEND_URL is not set
-  'https://farmconnect-frontend.vercel.app', // Replace with your actual frontend domain
+  'https://farmconnect-beta.vercel.app',
+  'https://farmconnect-frontend.vercel.app',
+  process.env.FRONTEND_URL
 ].filter(Boolean); // Remove undefined values
 
 const corsOptions = {
-  origin: function (origin, callback) {
+  origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('Blocked by CORS:', origin);
-      callback(new Error('Not allowed by CORS'));
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     }
+    
+    console.log('🚫 Blocked by CORS:', origin);
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   maxAge: 86400 // 24 hours
 };
 
