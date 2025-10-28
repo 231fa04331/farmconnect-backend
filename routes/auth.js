@@ -1,10 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken'); // Fix: jsonwebtoken (not jsonweptoken)
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const authMiddleware = require('../middleware/auth');
 const router = express.Router();
 
-// SIGN UP (REGISTER)
+// ✅ PUBLIC ROUTE - REGISTER
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, userType } = req.body;
@@ -12,7 +13,10 @@ router.post('/register', async (req, res) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists with this email' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'User already exists with this email' 
+      });
     }
 
     // Hash password
@@ -36,6 +40,7 @@ router.post('/register', async (req, res) => {
     );
 
     res.status(201).json({
+      success: true,
       message: 'User created successfully!',
       token,
       user: {
@@ -48,11 +53,14 @@ router.post('/register', async (req, res) => {
 
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error during registration' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error during registration' 
+    });
   }
 });
 
-// SIGN IN (LOGIN) - Move this from middleware
+// ✅ PUBLIC ROUTE - LOGIN
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -60,16 +68,22 @@ router.post('/login', async (req, res) => {
     // 1. Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid email or password' 
+      });
     }
 
     // 2. Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid email or password' 
+      });
     }
 
-    // 3. Generate JWT token - FIX: jsonwebtoken (not jsonweptoken)
+    // 3. Generate JWT token
     const token = jwt.sign(
       { 
         userId: user._id,
@@ -81,6 +95,7 @@ router.post('/login', async (req, res) => {
 
     // 4. Return success response
     res.json({
+      success: true,
       message: 'Login successful!',
       token,
       user: {
@@ -98,7 +113,31 @@ router.post('/login', async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during login' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error during login' 
+    });
+  }
+});
+
+// ✅ PROTECTED ROUTE - Get current user profile
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      user: {
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        userType: req.user.userType
+      }
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error fetching user data' 
+    });
   }
 });
 
