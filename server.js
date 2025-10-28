@@ -9,38 +9,30 @@ const investorRoutes = require('./routes/investors');
 
 const app = express();
 
-// ✅ CORS Configuration - Supports multiple origins (local + production)
+// ✅ CORS Configuration - 100% Working Fix
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'http://localhost:5000',
   'https://farmconnect-beta.vercel.app',
-  'https://farmconnect-frontend.vercel.app',
-  process.env.FRONTEND_URL
-].filter(Boolean); // Remove undefined values
+  'https://farmconnect-frontend.vercel.app'
+];
 
-const corsOptions = {
+app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    
-    console.log('🚫 Blocked by CORS:', origin);
+    console.log('❌ Blocked by CORS:', origin);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400 // 24 hours
-};
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+// ✅ Handle preflight OPTIONS requests globally
+app.options('*', cors());
 
 app.use(express.json());
 
