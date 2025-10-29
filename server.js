@@ -50,10 +50,15 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'Server is working!' });
 });
 
-// ✅ MongoDB connection
-mongoose.connect(process.env.MONGODB_URI )
-  .then(() => console.log('Connected to MongoDB - formconnect database'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// ✅ MongoDB connection with better error handling
+mongoose.connect(process.env.MONGODB_URI, {
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+})
+  .then(() => console.log('✅ Connected to MongoDB - formconnect database'))
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err.message);
+    // Don't crash the server, let it start anyway
+  });
 
 // ✅ Export app for Vercel
 module.exports = app;
